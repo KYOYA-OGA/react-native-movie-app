@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {StyleSheet, Text, View, Dimensions, ScrollView} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import {
   getPopularMovies,
   getUpcomingMovies,
@@ -9,16 +16,18 @@ import {
 } from '../services/services';
 import {SliderBox} from 'react-native-image-slider-box';
 import List from '../components/List';
+import Error from '../components/Error';
 
 const dimentions = Dimensions.get('screen');
 
-const Home = () => {
+const Home = ({navigation}) => {
   const [movieImages, setMovieImages] = useState([]);
   const [popularMovies, setPopularMovies] = useState([]);
   const [popularTv, setPopularTv] = useState([]);
   const [familyMovies, setFamilyMovies] = useState([]);
   const [documentaries, setDocumentaries] = useState([]);
   const [error, setError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     getData()
@@ -38,10 +47,14 @@ const Home = () => {
           setPopularTv(popularTvData);
           setFamilyMovies(familyMoviesData);
           setDocumentaries(documentariesData);
+          setLoaded(true);
         },
       )
-      .catch(err => {
-        setError(err);
+      .catch(() => {
+        setError(true);
+      })
+      .finally(() => {
+        setLoaded(true);
       });
   }, []);
 
@@ -57,39 +70,59 @@ const Home = () => {
 
   return (
     <>
-      <ScrollView>
-        {movieImages && (
-          <View style={styles.sliderContainer}>
-            <SliderBox
-              images={movieImages}
-              dotStyle={styles.sliderStyle}
-              sliderBoxHeight={dimentions.height / 1.5}
-              autoplay={true}
-              circleLoop={true}
-            />
-          </View>
-        )}
-        {popularMovies && (
-          <View style={styles.carousel}>
-            <List title="Popular Movies" content={popularMovies} />
-          </View>
-        )}
-        {popularTv && (
-          <View style={styles.carousel}>
-            <List title="Popular TV Shows" content={popularTv} />
-          </View>
-        )}
-        {familyMovies && (
-          <View style={styles.carousel}>
-            <List title="Family Movies" content={familyMovies} />
-          </View>
-        )}
-        {documentaries && (
-          <View style={styles.carousel}>
-            <List title="Documentaries" content={documentaries} />
-          </View>
-        )}
-      </ScrollView>
+      {loaded && !error && (
+        <ScrollView>
+          {movieImages && (
+            <View style={styles.sliderContainer}>
+              <SliderBox
+                images={movieImages}
+                dotStyle={styles.sliderStyle}
+                sliderBoxHeight={dimentions.height / 1.5}
+                autoplay={true}
+                circleLoop={true}
+              />
+            </View>
+          )}
+          {popularMovies && (
+            <View style={styles.carousel}>
+              <List
+                navigation={navigation}
+                title="Popular Movies"
+                content={popularMovies}
+              />
+            </View>
+          )}
+          {popularTv && (
+            <View style={styles.carousel}>
+              <List
+                navigation={navigation}
+                title="Popular TV Shows"
+                content={popularTv}
+              />
+            </View>
+          )}
+          {familyMovies && (
+            <View style={styles.carousel}>
+              <List
+                navigation={navigation}
+                title="Family Movies"
+                content={familyMovies}
+              />
+            </View>
+          )}
+          {documentaries && (
+            <View style={styles.carousel}>
+              <List
+                navigation={navigation}
+                title="Documentaries"
+                content={documentaries}
+              />
+            </View>
+          )}
+        </ScrollView>
+      )}
+      {!loaded && <ActivityIndicator size="large" />}
+      {error && <Error />}
     </>
   );
 };
