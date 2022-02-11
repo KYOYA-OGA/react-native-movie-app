@@ -37,3 +37,10 @@ export const getMovieById = async id => {
   const response = await axios.get(`${apiUrl}/movie/${id}?${apiKey}`);
   return response.data;
 };
+
+export const searchMovieTv = async (query, type) => {
+  const response = await axios.get(
+    `${apiUrl}/search/${type}?${apiKey}&query=${query}`,
+  );
+  return response.data.results;
+};

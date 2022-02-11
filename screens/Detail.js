@@ -7,12 +7,16 @@ import {
   Dimensions,
   ActivityIndicator,
   View,
+  Modal,
+  Pressable,
 } from 'react-native';
 import {Rating} from 'react-native-ratings';
 import Error from '../components/Error';
 import {getMovieById} from '../services/services';
 import dateFormat from 'dateformat';
 import PlayButton from '../components/PlayButton';
+import VideoPlayer from 'react-native-video-controls';
+import Video from '../components/Video';
 
 const placeholderImage = require('../assets/images/placeholder.png');
 const height = Dimensions.get('screen').height;
@@ -23,6 +27,7 @@ const Detail = ({route, navigation}) => {
   const [movieDetail, setMovieDetail] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     getMovieById(movieId)
@@ -34,51 +39,67 @@ const Detail = ({route, navigation}) => {
         setError(true);
       });
   }, [movieId]);
-  console.log(movieDetail);
+
+  const videoShown = () => {
+    setModalVisible(!modalVisible);
+  };
   return (
     <>
       {loaded && (
-        <ScrollView>
-          <Image
-            resizeMode="cover"
-            style={styles.image}
-            source={
-              movieDetail.poster_path
-                ? {
-                    uri: `https://image.tmdb.org/t/p/w500/${movieDetail.poster_path}`,
-                  }
-                : placeholderImage
-            }
-          />
-          <View style={styles.container}>
-            <View style={styles.playButton}>
-              <PlayButton />
-            </View>
-            <Text style={styles.title}>{movieDetail.title}</Text>
-            {movieDetail.genres && (
-              <View style={styles.genresContainer}>
-                {movieDetail.genres.map(genre => (
-                  <Text style={styles.genre} key={genre.id}>
-                    {genre.name}
-                  </Text>
-                ))}
-              </View>
-            )}
-
-            <Rating
-              startingValue={movieDetail.vote_average / 2}
-              type="star"
-              ratingCount={5}
-              imageSize={30}
-              readonly={true}
+        <View>
+          <ScrollView>
+            <Image
+              resizeMode="cover"
+              style={styles.image}
+              source={
+                movieDetail.poster_path
+                  ? {
+                      uri: `https://image.tmdb.org/t/p/w500/${movieDetail.poster_path}`,
+                    }
+                  : placeholderImage
+              }
             />
-            <Text style={styles.overview}>{movieDetail.overview}</Text>
-            <Text style={styles.releaseDate}>
-              Release data :{' '}
-              {dateFormat(movieDetail.release_date, 'yyyy-mm-dd')}
-            </Text>
-          </View>
-        </ScrollView>
+            <View style={styles.container}>
+              <View style={styles.playButton}>
+                <PlayButton handlePress={videoShown} />
+              </View>
+              <Text style={styles.title}>{movieDetail.title}</Text>
+              {movieDetail.genres && (
+                <View style={styles.genresContainer}>
+                  {movieDetail.genres.map(genre => (
+                    <Text style={styles.genre} key={genre.id}>
+                      {genre.name}
+                    </Text>
+                  ))}
+                </View>
+              )}
+
+              <Rating
+                startingValue={movieDetail.vote_average / 2}
+                type="star"
+                ratingCount={5}
+                imageSize={30}
+                readonly={true}
+              />
+              <Text style={styles.overview}>{movieDetail.overview}</Text>
+              <Text style={styles.releaseDate}>
+                Release data :{' '}
+                {dateFormat(movieDetail.release_date, 'yyyy-mm-dd')}
+              </Text>
+            </View>
+          </ScrollView>
+          <Modal
+            supportedOrientations={['portrait', 'landscape']}
+            animationType="slide"
+            visible={modalVisible}>
+            <View style={styles.videoModal}>
+              <Video
+                onClose={() => setModalVisible(false)}
+                navigation={navigation}
+              />
+            </View>
+          </Modal>
+        </View>
       )}
       {!loaded && <ActivityIndicator size="large" />}
       {error && <Error />}
@@ -120,6 +141,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -25,
     right: 20,
+  },
+  videoModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
